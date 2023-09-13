@@ -14,7 +14,7 @@ CAT2WIDTH = 155
 CAT2HEIGHT = 171
 CAT2IMG = pygame.image.load('Desktop/Flappy Cat/img/cat2.png')
 
-BACKGROUND = pygame.image.load('Desktop/Flappy Cat/img/background1.jpg')
+BACKGROUND = pygame.image.load('Desktop/Flappy Cat/img/background.jpg')
 
 COLUMNWIDTH = 60
 COLUMNHEIGHT = 500
@@ -27,10 +27,6 @@ PLAYWIDTH = 100
 PLAYHEIGHT = 60
 PLAYIMG = pygame.image.load('Desktop/Flappy Cat/img/play.png')
 
-REPLAYWIDTH = 150
-REPLAYHEIGHT = 150
-REPLAYIMG = pygame.image.load('Desktop/Flappy Cat/img/replay.png')
-
 pygame.init()
 FPS = 60
 fpsClock = pygame.time.Clock()
@@ -38,6 +34,8 @@ fpsClock = pygame.time.Clock()
 DISPLAYSURF = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT))
 pygame.display.set_caption('Flappy Cat')
 
+icon = pygame.image.load('Desktop/Flappy Cat/img/cat1.png')
+pygame.display.set_icon(icon)
 
 main_sound = pygame.mixer.music.load("Desktop/Flappy Cat/music/Sneaky-Snitch.mp3")
 pygame.mixer.music.set_volume(0.3)
@@ -108,7 +106,7 @@ def rectCollision(rect1, rect2):
         return True
     return False
 
-def isGameOver(cat, columns):
+def isGameOver(score, cat, columns):
         for i in range(3):
             rectCat = [cat.x, cat.y, cat.width, cat.height]
             rectColumn1 = [columns.ls[i][0], columns.ls[i][1] - columns.height, columns.width, columns.height]
@@ -118,12 +116,13 @@ def isGameOver(cat, columns):
                 return True
         if cat.y + cat.height < 0 or cat.y + cat.height > WINDOWHEIGHT:
             die_sound.play()
-            return True 
+            return True
         return False
 
 class Score():
     def __init__(self):
         self.score = 0
+        self.high_score = 0
         self.addScore = True
     
     def draw(self):
@@ -143,6 +142,7 @@ class Score():
         if collision == True:
             if self.addScore == True:
                 self.score += 1
+                self.high_score += 1
                 score_sound.play()
             self.addScore = False
         else:
@@ -217,9 +217,9 @@ def gamePlay(cat, columns, score):
         score.draw()
         score.update(cat, columns)
 
-        if isGameOver(cat, columns) == True:
+        if isGameOver(score, cat, columns) == True:
             return
-
+    
         pygame.display.update()
         fpsClock.tick(FPS)
 
@@ -229,15 +229,19 @@ def gameOver(cat2, score):
     headingSize = headingSuface.get_size()
     
     font = pygame.font.SysFont('John Hubbard', 40)
-    commentSuface = font.render('Click "Space" to play again', True, (255,255,0))
-    commentSize = commentSuface.get_size()
+    comment1Suface = font.render('>> Click "Space" to play again <<', True, (255,255,255))
+    comment1Size = comment1Suface.get_size()
+    
+    font = pygame.font.SysFont('John Hubbard', 40)
+    comment2Suface = font.render('>> Click "ESC" to exit game <<', True, (255,255,255))
+    comment2Size = comment2Suface.get_size()
 
     font = pygame.font.SysFont('consolas', 30)
     scoreSuface = font.render('Score:' + str(score.score), True, (0, 0, 0))
     scoreSize = scoreSuface.get_size()
 
     font = pygame.font.SysFont('consolas', 30)
-    high_scoreSuface = font.render('High Score:' + str(score.score), True, (0, 0, 0))
+    high_scoreSuface = font.render('High Score:' + str(score.high_score), True, (0, 0, 0))
     high_scoreSize = high_scoreSuface.get_size()
 
     while True:
@@ -248,16 +252,19 @@ def gameOver(cat2, score):
             if event.type == KEYUP:
                 if event.key == K_SPACE:
                     return
+            if event.type == KEYUP:
+                if event.key == K_ESCAPE:
+                    sys.exit()
         
         DISPLAYSURF.blit(BACKGROUND, (0, 0))
         cat2.draw()
         DISPLAYSURF.blit(headingSuface, (int((WINDOWWIDTH - headingSize[0])/2), 100))
-        DISPLAYSURF.blit(commentSuface, (int((WINDOWWIDTH - commentSize[0])/2), 550))
+        DISPLAYSURF.blit(comment1Suface, (int((WINDOWWIDTH - comment1Size[0])/2), 600))
+        DISPLAYSURF.blit(comment2Suface, (int((WINDOWWIDTH - comment2Size[0])/2), 650))
         DISPLAYSURF.blit(scoreSuface, (int((WINDOWWIDTH - scoreSize[0])/2), 160))
         DISPLAYSURF.blit(high_scoreSuface, (int((WINDOWWIDTH - high_scoreSize[0])/2), 190))
         pygame.display.update()
         fpsClock.tick(FPS)
-
 
 def main():
     cat = Cat()
@@ -265,6 +272,7 @@ def main():
     score = Score()
     play = Play()
     cat2 = Cat2()
+    cat = Cat()
     while True:
         gameStart(cat,play)
         gamePlay(cat, columns, score)
